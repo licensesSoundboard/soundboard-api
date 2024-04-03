@@ -4,6 +4,8 @@ import OpenAI from "openai";
 import { RunSubmitToolOutputsParams } from "openai/resources/beta/threads/runs/runs";
 
 dotenv.config();
+let reruns = 0;
+let tavilyReruns = 0;
 
 // Function to perform a Tavily search
 async function tavilySearch(query: string): Promise<any> {
@@ -54,12 +56,11 @@ async function submitToolOutputs(
   openai: OpenAI
 ): Promise<any> {
   const toolOutputArray = [];
-
-  let reruns = 0;
   let output = null;
   let toolCallId;
   let functionName;
   let functionArgs;
+  let stringOutput;
 
   for (const tool of toolsToCall) {
     toolCallId = tool.id;
@@ -72,6 +73,21 @@ async function submitToolOutputs(
     }
   }
 
+  if (output) {
+    stringOutput = JSON.stringify(output);
+  } else if (!output && tavilyReruns == 0) {
+    console.log("reruning tavily", tavilyReruns);
+    tavilyReruns += 1;
+    const runWithTools = await submitToolOutputs(
+      threadId,
+      runId,
+      toolsToCall,
+      openai
+    );
+  } else if (!output && tavilyReruns > 0) {
+    return;
+  }
+
   console.log("submitting tools");
   const newRun = await openai.beta.threads.runs.submitToolOutputs(
     threadId,
@@ -80,7 +96,7 @@ async function submitToolOutputs(
       tool_outputs: [
         {
           tool_call_id: toolCallId,
-          output: JSON.stringify(output),
+          output: stringOutput,
         },
       ],
     }
@@ -92,8 +108,8 @@ async function submitToolOutputs(
     (completedRun.status == "failed" && reruns == 0) ||
     (completedRun.status == "requires_action" && reruns == 0)
   ) {
+    console.log("resubmitting tools", completedRun.status, reruns);
     reruns = +1;
-    console.log("resubmitting tools");
     const runWithTools = await submitToolOutputs(
       threadId,
       runId,

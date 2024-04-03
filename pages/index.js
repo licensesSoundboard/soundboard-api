@@ -10,8 +10,8 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          threadId: "thread_9UBsYFHupHttTPeWN71R2B1T",
-          prompt: "how many of those applied for engineering?",
+          threadId: "thread_ZHcgBBLhsJiFEJm7TZTHr34c",
+          prompt: "What was the size of MIT undergraduate class of 2026?",
         }),
       });
       if (response.ok) {
