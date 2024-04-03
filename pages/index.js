@@ -10,9 +10,8 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          threadId: "thread_bEINC0O8ieEiTUZul6UqlNFN",
-          prompt:
-            "what are the admission statistics for Northeastern University Engineering?",
+          threadId: "thread_LJj9HjRw2gr7IaqaRguKjaT4",
+          prompt: "For MIT, what was the accpetance rate this year?",
         }),
       });
       if (response.ok) {

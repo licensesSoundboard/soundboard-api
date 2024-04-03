@@ -13,9 +13,9 @@ export default async function handler(
       res.status(400).json({ error: "Missing required fields" });
       return;
     }
-
     const response = await runSearch(data.threadId, data.prompt);
     res.status(200).json({ response });
+    console.log(response);
   } else {
     res.setHeader("Allow", ["POST"]);
     res.status(405).end(`Method ${req.method} Not Allowed`);

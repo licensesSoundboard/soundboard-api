@@ -9,16 +9,15 @@ dotenv.config();
 async function tavilySearch(query: string): Promise<any> {
   const apiKey = process.env.TAVILY_API_KEY;
 
-  console.log("before try in tavily");
   try {
-    console.log(query);
+    console.log("running tavily");
     const response = await fetch("https://api.tavily.com/search", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        api_key: "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",
+        api_key: apiKey,
         query: query,
         search_depth: "basic",
         max_tokens: 8000,
@@ -29,7 +28,7 @@ async function tavilySearch(query: string): Promise<any> {
       throw new Error("Tavily search request failed");
     }
     const apiResponse = await response.json(); // Parse JSON from the response
-    console.log("api response", apiResponse);
+    console.log("tavily run successfuly");
     return apiResponse;
   } catch {}
 }
@@ -68,20 +67,12 @@ async function submitToolOutputs(
     functionArgs = tool.function.arguments;
 
     if (functionName === "highLevelBrowse") {
-      console.log("function name working");
+      console.log("calling tavily");
       output = await tavilySearch(JSON.parse(functionArgs).instruction);
-    }
-    if (output) {
-      console.log("tool call id", toolCallId);
-      toolOutputArray.push({ toolCallId: toolCallId, output: output });
     }
   }
 
-  const body: RunSubmitToolOutputsParams = {
-    tool_outputs: toolOutputArray,
-  };
-
-  console.log("output", JSON.stringify(output));
+  console.log("submitting tools");
   const newRun = await openai.beta.threads.runs.submitToolOutputs(
     threadId,
     runId,
@@ -96,19 +87,18 @@ async function submitToolOutputs(
   );
 
   const completedRun = await waitForRunCompletion(threadId, newRun.id, openai);
-  console.log(completedRun.status);
-
-  console.log("answer", completedRun);
 
   if (completedRun.status == "requires_action") {
-    console.log("hello");
-    console.log(completedRun.required_action.submit_tool_outputs.tool_calls);
+    console.log("resubmitting tools");
     const runWithTools = await submitToolOutputs(
       threadId,
       runId,
       completedRun.required_action.submit_tool_outputs.tool_calls,
       openai
     );
+  }
+  if (completedRun.status == "completed") {
+    return completedRun;
   }
 }
 
@@ -135,7 +125,10 @@ async function printMessages(threadId: string, openai: OpenAI) {
   }
 }
 
-export async function runSearch(threadId: string, prompt: string) {
+export async function runSearch(
+  threadId: string,
+  prompt: string
+): Promise<String> {
   const openaiApiKey = process.env.OPENAI_API_KEY;
   if (!openaiApiKey) {
     throw new Error("OpenAI API key is not defined");
@@ -170,17 +163,18 @@ export async function runSearch(threadId: string, prompt: string) {
   const runId = completedRun.id;
 
   if (completedRun.status == "failed") {
-    throw new Error(completedRun.error);
+    return "failed";
+  }
+  if (completedRun.status == "completed") {
+    return "completed";
   } else if (completedRun.status == "requires_action") {
-    console.log("hello");
-    console.log(completedRun.required_action.submit_tool_outputs.tool_calls);
+    console.log("calling submit tools");
     const runWithTools = await submitToolOutputs(
       threadId,
       runId,
       completedRun.required_action.submit_tool_outputs.tool_calls,
       openai
     );
+    return runWithTools.status;
   }
-  console.log("printing messages");
-  printMessages(threadId, openai);
 }
