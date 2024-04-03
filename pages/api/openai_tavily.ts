@@ -130,6 +130,7 @@ export async function runSearch(
   prompt: string
 ): Promise<String> {
   const openaiApiKey = process.env.OPENAI_API_KEY;
+  console.log(openaiApiKey);
   if (!openaiApiKey) {
     throw new Error("OpenAI API key is not defined");
   }
