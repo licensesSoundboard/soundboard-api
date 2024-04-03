@@ -75,7 +75,7 @@ async function submitToolOutputs(
 
   if (output) {
     stringOutput = JSON.stringify(output);
-  } else if (!output && tavilyReruns == 0) {
+  } else if (!output && tavilyReruns < 2) {
     console.log("reruning tavily", tavilyReruns);
     tavilyReruns += 1;
     const runWithTools = await submitToolOutputs(
@@ -84,7 +84,7 @@ async function submitToolOutputs(
       toolsToCall,
       openai
     );
-  } else if (!output && tavilyReruns > 0) {
+  } else if (!output && tavilyReruns > 1) {
     return;
   }
 
@@ -105,8 +105,8 @@ async function submitToolOutputs(
   const completedRun = await waitForRunCompletion(threadId, newRun.id, openai);
 
   if (
-    (completedRun.status == "failed" && reruns == 0) ||
-    (completedRun.status == "requires_action" && reruns == 0)
+    (completedRun.status == "failed" && reruns < 2) ||
+    (completedRun.status == "requires_action" && reruns < 2)
   ) {
     console.log("resubmitting tools", completedRun.status, reruns);
     reruns = +1;
