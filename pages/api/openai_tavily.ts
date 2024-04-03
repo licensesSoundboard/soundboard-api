@@ -55,13 +55,13 @@ async function submitToolOutputs(
 ): Promise<any> {
   const toolOutputArray = [];
 
+  let reruns = 0;
   let output = null;
   let toolCallId;
   let functionName;
   let functionArgs;
 
   for (const tool of toolsToCall) {
-    output = null;
     toolCallId = tool.id;
     functionName = tool.function.name;
     functionArgs = tool.function.arguments;
@@ -88,7 +88,11 @@ async function submitToolOutputs(
 
   const completedRun = await waitForRunCompletion(threadId, newRun.id, openai);
 
-  if (completedRun.status == "requires_action") {
+  if (
+    (completedRun.status == "failed" && reruns == 0) ||
+    (completedRun.status == "requires_action" && reruns == 0)
+  ) {
+    reruns = +1;
     console.log("resubmitting tools");
     const runWithTools = await submitToolOutputs(
       threadId,
@@ -96,8 +100,7 @@ async function submitToolOutputs(
       completedRun.required_action.submit_tool_outputs.tool_calls,
       openai
     );
-  }
-  if (completedRun.status == "completed") {
+  } else {
     return completedRun;
   }
 }
@@ -175,7 +178,12 @@ export async function runSearch(
       completedRun.required_action.submit_tool_outputs.tool_calls,
       openai
     );
-    return runWithTools.status;
+
+    if (runWithTools) {
+      return runWithTools.status;
+    } else {
+      return "failed";
+    }
   }
 }
 export const config = {

@@ -10,8 +10,8 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          threadId: "thread_LJj9HjRw2gr7IaqaRguKjaT4",
-          prompt: "For MIT, what was the accpetance rate this year?",
+          threadId: "thread_9UBsYFHupHttTPeWN71R2B1T",
+          prompt: "how many of those applied for engineering?",
         }),
       });
       if (response.ok) {
