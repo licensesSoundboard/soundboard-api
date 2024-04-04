@@ -71,11 +71,14 @@ async function submitToolOutputs(
       console.log("calling tavily");
       output = await tavilySearch(JSON.parse(functionArgs).instruction);
     }
+    if (output) {
+      toolOutputArray.push(output);
+    }
   }
 
-  if (output) {
-    stringOutput = JSON.stringify(output);
-  } else if (!output && tavilyReruns < 2) {
+  if (toolOutputArray) {
+    stringOutput = JSON.stringify(toolOutputArray);
+  } else if (!toolOutputArray) {
     console.log("reruning tavily", tavilyReruns);
     tavilyReruns += 1;
     const runWithTools = await submitToolOutputs(
@@ -84,8 +87,6 @@ async function submitToolOutputs(
       toolsToCall,
       openai
     );
-  } else if (!output && tavilyReruns > 1) {
-    return;
   }
 
   console.log("submitting tools");
@@ -105,8 +106,8 @@ async function submitToolOutputs(
   const completedRun = await waitForRunCompletion(threadId, newRun.id, openai);
 
   if (
-    (completedRun.status == "failed" && reruns < 2) ||
-    (completedRun.status == "requires_action" && reruns < 2)
+    completedRun.status == "failed" ||
+    completedRun.status == "requires_action"
   ) {
     console.log("resubmitting tools", completedRun.status, reruns);
     reruns = +1;
@@ -118,29 +119,6 @@ async function submitToolOutputs(
     );
   } else {
     return completedRun;
-  }
-}
-
-async function printMessages(threadId: string, openai: OpenAI) {
-  const messages = await openai.beta.threads.messages.list(threadId);
-  const chatGPTResponses = messages.data.filter(
-    (msg) => msg.role === "assistant"
-  );
-
-  const chatGPTResponse =
-    chatGPTResponses.length > 0
-      ? chatGPTResponses[chatGPTResponses.length - 1].content
-      : null;
-
-  if (
-    chatGPTResponse &&
-    chatGPTResponse.length > 0 &&
-    chatGPTResponse[0].type === "text"
-  ) {
-    const textResponse = chatGPTResponse[0].text;
-    console.log(textResponse);
-  } else {
-    console.log("no answer");
   }
 }
 
@@ -203,5 +181,5 @@ export async function runSearch(
   }
 }
 export const config = {
-  maxDuration: 300,
+  maxDuration: 75,
 };

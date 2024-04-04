@@ -10,8 +10,8 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          threadId: "thread_ZHcgBBLhsJiFEJm7TZTHr34c",
-          prompt: "What was the size of MIT undergraduate class of 2026?",
+          threadId: "thread_5gzEGhwzjC2VHAhe3MLbEQo5",
+          prompt: "give me a list of 30 universities in the northeast",
         }),
       });
       if (response.ok) {
