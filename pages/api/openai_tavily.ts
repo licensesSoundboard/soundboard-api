@@ -67,9 +67,9 @@ async function submitToolOutputs(
     functionName = tool.function.name;
     functionArgs = tool.function.arguments;
 
-    if (functionName === "highLevelBrowse") {
+    if (functionName === "tavily_search") {
       console.log("calling tavily");
-      output = await tavilySearch(JSON.parse(functionArgs).instruction);
+      output = await tavilySearch(JSON.parse(functionArgs));
     }
     if (output) {
       toolOutputArray.push(output);

@@ -10,7 +10,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          threadId: "thread_5gzEGhwzjC2VHAhe3MLbEQo5",
+          threadId: "thread_b7pe9g1TDwvPmYLno0XxSpCO",
           prompt: "give me a list of 30 universities in the northeast",
         }),
       });
