@@ -4,14 +4,14 @@ import styles from "../styles/Home.module.css";
 export default function Home() {
   const makeApiCall = async () => {
     try {
-      const response = await fetch("/api/chatgpt", {
+      const response = await fetch("/api/google-calendar-sync-token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          threadId: "thread_b7pe9g1TDwvPmYLno0XxSpCO",
-          prompt: "give me a list of 30 universities in the northeast",
+          authToken:
+            "ya29.a0AXooCgt6pzSIr-5X-HXrKyaVxyG3VOm8ZQDHwKVgYKE6cgOeZeRSUOK6fyDuFNANKNo-ihgGsXVCBKZwUIZMa6e5dWx5J3PDfiVBLFXcvnnFmSCQp-71bPCnX2eFAP-x591mSIqPN0hMbtDOeB1JDJ_BSzroIoO7bqdKaCgYKAVESARASFQHGX2MiTtn_9rILO20zXxgHyAQ7HQ0171",
         }),
       });
       if (response.ok) {

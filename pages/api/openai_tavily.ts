@@ -55,12 +55,14 @@ async function submitToolOutputs(
   toolsToCall: any[],
   openai: OpenAI
 ): Promise<any> {
-  const toolOutputArray = [];
-  let output = null;
-  let toolCallId;
+  let toolOutputArray: { tool_call_id: string; output: any }[] = [];
+  let output: any = null;
+  let toolCallId: string;
   let functionName;
   let functionArgs;
   let stringOutput;
+
+  console.log("toolsToCall", toolsToCall);
 
   for (const tool of toolsToCall) {
     toolCallId = tool.id;
@@ -69,16 +71,18 @@ async function submitToolOutputs(
 
     if (functionName === "tavily_search") {
       console.log("calling tavily");
-      output = await tavilySearch(JSON.parse(functionArgs));
+      output = await tavilySearch(JSON.parse(functionArgs).query);
     }
-    if (output) {
-      toolOutputArray.push(output);
+    console.log("outside", toolCallId, output);
+    if (output && toolCallId) {
+      console.log("inside", toolCallId, output);
+      toolOutputArray.push({
+        tool_call_id: toolCallId,
+        output: JSON.parse(output),
+      });
     }
   }
-
-  if (toolOutputArray) {
-    stringOutput = JSON.stringify(toolOutputArray);
-  } else if (!toolOutputArray) {
+  if (!toolOutputArray) {
     console.log("reruning tavily", tavilyReruns);
     tavilyReruns += 1;
     const runWithTools = await submitToolOutputs(
@@ -90,16 +94,12 @@ async function submitToolOutputs(
   }
 
   console.log("submitting tools");
+  console.log("toolOutputArray tools", toolOutputArray);
   const newRun = await openai.beta.threads.runs.submitToolOutputs(
     threadId,
     runId,
     {
-      tool_outputs: [
-        {
-          tool_call_id: toolCallId,
-          output: stringOutput,
-        },
-      ],
+      tool_outputs: toolOutputArray,
     }
   );
 
